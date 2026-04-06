@@ -16,6 +16,7 @@ spec:
       containers:
       - name: backend
         image: acrformation.azurecr.io/backend:latest
+        imagePullPolicy: Always        # 👈 toujours prendre la dernière image
         env:
         - name: DB_USER
           valueFrom:

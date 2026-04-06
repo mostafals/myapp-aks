@@ -16,6 +16,7 @@ spec:
       containers:
       - name: frontend-react
         image: acrformation.azurecr.io/frontend:latest
+        imagePullPolicy: Always        # 👈 toujours prendre la dernière image
         ports:
         - containerPort: 80
 ---
