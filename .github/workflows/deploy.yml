@@ -48,6 +48,13 @@ jobs:
         resource-group: ${{ env.AKS_RG }}
         cluster-name: ${{ env.AKS_CLUSTER }}
 
+    - name: Install kubelogin        # 👈 AJOUTE ICI
+      run: |
+        curl -LO https://github.com/Azure/kubelogin/releases/latest/download/kubelogin-linux-amd64.zip
+        unzip kubelogin-linux-amd64.zip
+        sudo mv bin/linux_amd64/kubelogin /usr/local/bin/
+        kubelogin convert-kubeconfig -l azurecli
+
     - name: Create SQL Secret
       run: |
         kubectl create secret generic azure-sql-secret \
