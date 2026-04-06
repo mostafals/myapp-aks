@@ -16,17 +16,54 @@ const config = {
   }
 };
 
-// Route GET /
-app.get('/', (req, res) => {
-  res.json({ message: 'API fonctionne !' });
+// Connexion DB
+async function getDB() {
+  return await sql.connect(config);
+}
+
+// GET toutes les tâches
+app.get('/tasks', async (req, res) => {
+  try {
+    await getDB();
+    const result = await sql.query`SELECT * FROM tasks ORDER BY created_at DESC`;
+    res.json(result.recordset);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
-// Route GET /users ET /api/users
-app.get(['/users', '/api/users'], async (req, res) => {
+// POST nouvelle tâche
+app.post('/tasks', async (req, res) => {
   try {
-    await sql.connect(config);
-    const result = await sql.query`SELECT * FROM users`;
-    res.json(result.recordset);
+    const { title } = req.body;
+    await getDB();
+    await sql.query`INSERT INTO tasks (title) VALUES (${title})`;
+    res.json({ message: 'Tâche créée !' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// PUT modifier tâche (completed)
+app.put('/tasks/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { completed } = req.body;
+    await getDB();
+    await sql.query`UPDATE tasks SET completed = ${completed} WHERE id = ${id}`;
+    res.json({ message: 'Tâche mise à jour !' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// DELETE supprimer tâche
+app.delete('/tasks/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    await getDB();
+    await sql.query`DELETE FROM tasks WHERE id = ${id}`;
+    res.json({ message: 'Tâche supprimée !' });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
