@@ -48,7 +48,7 @@ jobs:
         resource-group: ${{ env.AKS_RG }}
         cluster-name: ${{ env.AKS_CLUSTER }}
 
-    - name: Install kubelogin        # 👈 AJOUTE ICI
+    - name: Install kubelogin
       run: |
         curl -LO https://github.com/Azure/kubelogin/releases/latest/download/kubelogin-linux-amd64.zip
         unzip kubelogin-linux-amd64.zip
