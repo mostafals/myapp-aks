@@ -1,0 +1,62 @@
+name: Build and Deploy to AKS
+
+on:
+  push:
+    branches: [ main ]
+
+env:
+  ACR_NAME: acrformation.azurecr.io
+  AKS_CLUSTER: aksformation
+  AKS_RG: rg-formation-aks
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+
+    - name: Login Azure
+      uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+    - name: Login ACR
+      run: |
+        docker login acrformation.azurecr.io \
+          -u ${{ secrets.ACR_USERNAME }} \
+          -p ${{ secrets.ACR_PASSWORD }}
+
+    - name: Build & Push Backend
+      run: |
+        docker build -t acrformation.azurecr.io/backend:${{ github.sha }} ./backend
+        docker push acrformation.azurecr.io/backend:${{ github.sha }}
+        docker tag acrformation.azurecr.io/backend:${{ github.sha }} acrformation.azurecr.io/backend:latest
+        docker push acrformation.azurecr.io/backend:latest
+
+    - name: Build & Push Frontend
+      run: |
+        docker build -t acrformation.azurecr.io/frontend:${{ github.sha }} ./frontend
+        docker push acrformation.azurecr.io/frontend:${{ github.sha }}
+        docker tag acrformation.azurecr.io/frontend:${{ github.sha }} acrformation.azurecr.io/frontend:latest
+        docker push acrformation.azurecr.io/frontend:latest
+
+    - name: Set AKS context
+      uses: azure/aks-set-context@v3
+      with:
+        resource-group: ${{ env.AKS_RG }}
+        cluster-name: ${{ env.AKS_CLUSTER }}
+
+    - name: Create SQL Secret
+      run: |
+        kubectl create secret generic azure-sql-secret \
+          --from-literal=DB_USER=adminmm \
+          --from-literal=DB_PASSWORD=${{ secrets.DB_PASSWORD }} \
+          -n demo --dry-run=client -o yaml | kubectl apply -f -
+
+    - name: Deploy to AKS
+      run: |
+        kubectl apply -f k8s/backend.yaml
+        kubectl apply -f k8s/frontend.yaml
+        kubectl apply -f k8s/ingress.yaml
