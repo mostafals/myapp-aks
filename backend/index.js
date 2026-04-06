@@ -16,11 +16,13 @@ const config = {
   }
 };
 
+// Route GET /
 app.get('/', (req, res) => {
   res.json({ message: 'API fonctionne !' });
 });
 
-app.get('/users', async (req, res) => {
+// Route GET /users ET /api/users
+app.get(['/users', '/api/users'], async (req, res) => {
   try {
     await sql.connect(config);
     const result = await sql.query`SELECT * FROM users`;

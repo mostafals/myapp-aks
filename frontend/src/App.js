@@ -8,12 +8,15 @@ function App() {
     fetch('/api/users')
       .then(res => res.json())
       .then(data => {
-        setUsers(data);
-        setStatus('Connecté à Azure SQL ✅');
+        if (Array.isArray(data)) {
+          setUsers(data);
+          setStatus('Connecté à Azure SQL ✅');
+        } else {
+          setStatus('Réponse API: ' + JSON.stringify(data));
+        }
       })
       .catch(err => {
-        setStatus('Erreur connexion API ❌');
-        console.error(err);
+        setStatus('Erreur: ' + err.message);
       });
   }, []);
 
